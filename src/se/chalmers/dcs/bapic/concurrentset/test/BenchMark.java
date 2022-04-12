@@ -48,7 +48,7 @@ public class BenchMark {
     private static int keyRange = 100;
     private static int seed = 0;
     private static boolean testSanity = false;
-    private static String setType = "HelpOptimalSimpleLFBST";
+    private static String setType = "KBST";
     private static int warmuptime = 2;
     private static double begin;
     private static double end;
@@ -91,6 +91,9 @@ public class BenchMark {
                 break;
             case "LFSkipList":
                 set = new ConcSkipListWrapper();
+                break;
+            case "KBST":
+                set = new KBST(4);
                 break;
             default:
                 set = null;
