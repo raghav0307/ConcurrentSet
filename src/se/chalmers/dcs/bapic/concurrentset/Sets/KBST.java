@@ -137,7 +137,7 @@ public class KBST implements SetADT{
             }
             else if (mode == 1) { // PRUNING DELETE
                 // set newNode to flagged terminal node
-                newNode = new Node(terminal);
+                newNode = new Node(terminal, true);
                 int terminalIndex = getChildIndex(parent, key);
 
                 if (!terminal.isFlagged.get() && !terminal.isTagged.get()) {
@@ -174,14 +174,14 @@ public class KBST implements SetADT{
      * @return
      */
     protected final boolean cleanUp(Node ancestor, Node successor, Node parent, K key) {
-        for (int i = 0; i < parent.kcount; i++) {
+        for (int i = 0; i < parent.children.length(); i++) {
             parent.children.get(i).isTagged.set(true);
         }
         Node siblingChild = new Node();
         int count = 0;
-        for (int i = 0; i < parent.kcount; i++) {
+        for (int i = 0; i < parent.children.length(); i++) {
             if (!parent.children.get(i).isFlagged.get() && parent.children.get(i).kcount > 0) {
-                siblingChild = parent.children.get(i);
+                siblingChild = new Node(parent.children.get(i), false);
                 count++;
             }
         }
@@ -195,7 +195,7 @@ public class KBST implements SetADT{
             }
         } 
         else {
-            for (int i = 0; i < parent.kcount; i++) {
+            for (int i = 0; i < parent.children.length(); i++) {
                 if (parent.children.get(i).isFlagged.get()) {
                     parent.children.set(i, new Node());
                 }
@@ -209,6 +209,33 @@ public class KBST implements SetADT{
 
     public boolean traversalTest() {
         return true;
+    }
+
+    public void treeString(StringBuffer sb, Node n) {
+        if (n == null) {
+            sb.append("*");
+            return;
+        }
+        sb.append("(");
+        sb.append(n.kcount);
+        sb.append(" keys");
+        sb.append(" tagged " + n.isTagged.get());
+        sb.append(" flagged " + n.isFlagged.get());
+        for (int i=0; i < n.kcount; i++) {
+            sb.append(",");
+            sb.append(n.keys[i].getValue());
+        }
+        if (n.children != null) {
+            for (int i=0; i < n.children.length(); i++) {
+                treeString(sb, n.children.get(i));
+                sb.append(",");
+            }
+        }
+        sb.append(")");
+    }
+
+    public void treeString(StringBuffer sb) {
+        treeString(sb, root);
     }
 
     protected enum OperationType {SIMPLE_INSERT, SPROUTING_INSERT, SIMPLE_DELETE};
@@ -353,17 +380,18 @@ public class KBST implements SetADT{
         }
 
         // Constructor to create flagged node
-        public Node(Node n) {
+        // @param b we set isFlagged to b
+        public Node(Node n, boolean b) {
             this.keys = n.keys;
             this.kcount = n.kcount;
             this.children = n.children;
-            this.isFlagged = new AtomicBoolean(true);
+            this.isFlagged = new AtomicBoolean(b);
             this.isTagged = new AtomicBoolean();
         }
 
         int getNonEmptyChildCount() {
             int count = 0;
-            for (int i = 0; i < kcount; i++) {
+            for (int i = 0; i < children.length(); i++) {
                 if (children.get(i).kcount > 0) {
                     count++;
                 }

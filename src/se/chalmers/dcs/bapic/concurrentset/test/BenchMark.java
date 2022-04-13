@@ -40,14 +40,14 @@ import java.util.Random;
  */
 public class BenchMark {
 
-    private static int numberOfThreads = 2;
+    private static int numberOfThreads = 4;
     private static int maxRunningTime = 2;
     private static int addPercent = 50;
     private static int searchPercent = 0;
     private static int removePercent = 50;
     private static int keyRange = 100;
     private static int seed = 0;
-    private static boolean testSanity = false;
+    private static boolean testSanity = true;
     private static String setType = "KBST";
     private static int warmuptime = 2;
     private static double begin;
