@@ -18,22 +18,25 @@ package se.chalmers.dcs.bapic.concurrentset.Sets;
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import se.chalmers.dcs.bapic.concurrentset.utils.K;
+import se.chalmers.dcs.bapic.concurrentset.utils.SetADT;
+
 import java.util.concurrent.atomic.*;
 
-public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
+public class LockFreeKSTRQ implements SetADT {
 
     private static final AtomicReferenceFieldUpdater<Node, Info> infoUpdater =
             AtomicReferenceFieldUpdater.newUpdater(Node.class, Info.class, "info");
-    private final Node<E,V> root;
+    private final Node root;
 
-    private final int K;
+    private final int Knodes;
 
     public LockFreeKSTRQ(final int K) {
-        this(K, new Node<E,V>(K, true));
+        this(K, new Node(K, true));
     }
 
     private LockFreeKSTRQ(final int K, final Node root) {
-        this.K = K;
+        this.Knodes = K;
         this.root = root;
     }
     /**
@@ -41,11 +44,16 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
      * @return true if the key is present in the tree, and false otherwise
      * @throws NullPointerException in the event that key is null
      */
-    public final boolean containsKey(final E key) {
+    public final boolean containsKey(final K key) {
         if (key == null) throw new NullPointerException();
-        Node<E,V> l = root.c.get(0);
+        Node l = root.c.get(0);
         while (l.c != null) l = child(key, l);  /* while l is internal */
         return l.hasKey(key);
+    }
+
+    @Override
+    public final boolean contains(K key) {
+        return containsKey(key);
     }
 
     /**
@@ -57,14 +65,15 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
      *             and the value stored with it was null.
      * @throws NullPointerException in the event that key is null
      */
-    public final boolean add(final E value){
-        V added = putIfAbsent(value, (V) value);
+    @Override
+    public final boolean add(K value){
+        K added = putIfAbsent(value, value);
         return added == null;
     }
-    private final V putIfAbsent(final E key, final V value) {
+    private final K putIfAbsent(final K key, final K value) {
         if (key == null) throw new NullPointerException();
-        Node<E,V> p, l, newchild;
-        Info<E,V> pinfo;
+        Node p, l, newchild;
+        Info pinfo;
         int pindex; // index of the child of p that points to l
 
         while (true) {
@@ -82,10 +91,10 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
             // (so it is as if p.info were read first)
             // and also store the index of the child pointer of p that points to l
             pinfo = p.info;
-            Node<E,V> currentL = p.c.get(p.kcount);
+            Node currentL = p.c.get(p.kcount);
             pindex = p.kcount;
             for (int i=0;i<p.kcount;i++) {
-                if (less(key, (E)p.k[i])) {
+                if (less(key, (K)p.k[i])) {
                     currentL = p.c.get(i);
                     pindex = i;
                     break;
@@ -98,20 +107,20 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
             else if (pinfo != null && pinfo.getClass() != Clean.class) help(pinfo);
             else {
                 // SPROUTING INSERTION
-                if (l.kcount == K-1) { // l is full of keys
+                if (l.kcount == Knodes-1) { // l is full of keys
                     // create internal node with 4 children sorted by key
-                    newchild = new Node<E,V>(key, value, l);
+                    newchild = new Node(key, value, l);
 
                     // SIMPLE INSERTION
                 } else {
                     // create leaf node with sorted keys
                     // (at least one key of l is null and, by structural invariant,
                     // nulls appear at the end, so the last key is null)
-                    newchild = new Node<E,V>(key, value, l, false);
+                    newchild = new Node(key, value, l, false);
                 }
 
                 // flag and perform the insertion
-                final IInfo<E,V> newPInfo = new IInfo<E,V>(l, p, newchild, pindex);
+                final IInfo newPInfo = new IInfo(l, p, newchild, pindex);
                 if (infoUpdater.compareAndSet(p, pinfo, newPInfo)) {	    // [[ iflag CAS ]]
                     helpInsert(newPInfo);
                     return null;
@@ -129,14 +138,21 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
      *         not in the tree (or if the value stored with it was null)
      * @throws NullPointerException in the event that key is null
      */
-    public final boolean remove(final E value){
-        V removed = removeIfPresent(value);
+    @Override
+    public final boolean remove(K value){
+        K removed = removeIfPresent(value);
         return removed != null;
     }
-    private final V removeIfPresent(final E key) {
+
+    @Override
+    public boolean traversalTest() {
+        return true;
+    }
+
+    private final K removeIfPresent(final K key) {
         if (key == null) throw new NullPointerException();
-        Node<E,V> gp, p, l, newchild;
-        Info<E,V> gpinfo, pinfo;
+        Node gp, p, l, newchild;
+        Info gpinfo, pinfo;
         int pindex;  // index of the child of p that points to l
         int gpindex; // index of the child of gp that points to p
 
@@ -158,10 +174,10 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
             // (so it is as if gp.info were read first)
             // and also store the index of the child pointer of gp that points to p
             gpinfo = gp.info;
-            Node<E,V> currentP = gp.c.get(gp.kcount);
+            Node currentP = gp.c.get(gp.kcount);
             gpindex = gp.kcount;
             for (int i=0;i<gp.kcount;i++) {
-                if (less(key, (E)gp.k[i])) {
+                if (less(key, (K)gp.k[i])) {
                     currentP = gp.c.get(i);
                     gpindex = i;
                     break;
@@ -172,10 +188,10 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
 
             // - then do the same for pinfo and the child pointer from p to l
             pinfo = p.info;
-            Node<E,V> currentL = p.c.get(p.kcount);
+            Node currentL = p.c.get(p.kcount);
             pindex = p.kcount;
             for (int i=0;i<p.kcount;i++) {
-                if (less(key, (E)p.k[i])) {
+                if (less(key, (K)p.k[i])) {
                     currentL = p.c.get(i);
                     pindex = i;
                     break;
@@ -204,7 +220,7 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
 
                 // PRUNING DELETION
                 if (l.kcount == 1 && ccount == 2) {
-                    final DInfo<E,V> newGPInfo = new DInfo<E,V>(l, p, gp, pinfo, gpindex);
+                    final DInfo newGPInfo = new DInfo(l, p, gp, pinfo, gpindex);
                     if (infoUpdater.compareAndSet(gp, gpinfo, newGPInfo)) { // [[ dflag CAS ]]
                         if (helpDelete(newGPInfo)) return l.getValue(key);
                     } else {
@@ -214,10 +230,10 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
                     // SIMPLE DELETION
                 } else {
                     // create leaf with sorted keys
-                    newchild = new Node<E,V>(key, l);
+                    newchild = new Node(key, l);
 
                     // flag and perform the key deletion (like insertion)
-                    final IInfo<E,V> newPInfo = new IInfo<E,V>(l, p, newchild, pindex);
+                    final IInfo newPInfo = new IInfo(l, p, newchild, pindex);
                     if (infoUpdater.compareAndSet(p, pinfo, newPInfo)) {	// [[ kdflag CAS ]]
                         helpInsert(newPInfo);
                         return l.getValue(key);
@@ -236,27 +252,27 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
      */
 
     // Precondition: `nonnull' is non-null
-    private static <E extends Comparable<? super E>, V> boolean equal(final E nonnull, final E other) {
+    private static boolean equal(final K nonnull, final K other) {
         if (other == null) return false;
-        return nonnull.compareTo(other) == 0;
+        return nonnull.equals(other);
     }
 
     // Precondition: `nonnull' is non-null
-    private static <E extends Comparable<? super E>, V> boolean less(final E nonnull, final E other) {
+    private static boolean less(final K nonnull, final K other) {
         if (other == null) return true;
-        return nonnull.compareTo(other) < 0;
+        return nonnull.compareTo(other);
     }
 
     // Precondition: `nonnull' is non-null
-    private static <E extends Comparable<? super E>, V> boolean lessEqual(final E nonnull, final E other) {
+    private static boolean lessEqual(final K nonnull, final K other) {
         if (other == null) return true;
-        return nonnull.compareTo(other) <= 0;
+        return nonnull.compareTo(other) || nonnull.equals(other);
     }
 
     // Precondition: `nonnull' is non-null
-    private static <E extends Comparable<? super E>, V> boolean greater(final E nonnull, final E other) {
+    private static boolean greater(final K nonnull, final K other) {
         if (other == null) return false;
-        return nonnull.compareTo(other) > 0;
+        return !nonnull.compareTo(other);
     }
 
     // Precondition: `nonnull' is non-null
@@ -265,57 +281,57 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
         return nonnull.compareTo(other) >= 0;
     }
 
-    private Node<E,V> child(final E key, final Node<E,V> l) {
+    private Node child(final K key, final Node l) {
         if (l.k[0] == null) return l.c.get(0);
 
         int left = 0, right = l.kcount-1;
         while (right > left) {
             int mid = (left+right)/2;
-            if (key.compareTo((E)l.k[mid]) < 0) {
+            if (key.compareTo((K)l.k[mid])) {
                 right = mid;
             } else {
                 left = mid+1;
             }
         }
-        if (left == l.kcount-1 && key.compareTo((E)l.k[left]) >= 0) {
+        if (left == l.kcount-1 && !key.compareTo((K)l.k[left])) {
             return l.c.get(l.kcount);
         }
         return l.c.get(left);
     }
 
-    private void help(final Info<E,V> info) {
-        if (info.getClass() == IInfo.class)      helpInsert((IInfo<E,V>) info);
-        else if (info.getClass() == DInfo.class) helpDelete((DInfo<E,V>) info);
-        else if (info.getClass() == Mark.class)  helpMarked(((Mark<E,V>) info).dinfo);
+    private void help(final Info info) {
+        if (info.getClass() == IInfo.class)      helpInsert((IInfo) info);
+        else if (info.getClass() == DInfo.class) helpDelete((DInfo) info);
+        else if (info.getClass() == Mark.class)  helpMarked(((Mark) info).dinfo);
     }
 
-    private void helpInsert(final IInfo<E,V> info) {
+    private void helpInsert(final IInfo info) {
         info.oldchild.dirty = true;
 
         // CAS the correct child pointer of p from oldchild to newchild
         info.p.c.compareAndSet(info.pindex, info.oldchild, info.newchild);      // [[ ichild CAS ]]
-        infoUpdater.compareAndSet(info.p, info, new Clean<E,V>());              // [[ iunflag CAS ]]
+        infoUpdater.compareAndSet(info.p, info, new Clean());              // [[ iunflag CAS ]]
     }
 
-    private boolean helpDelete(final DInfo<E,V> info) {
+    private boolean helpDelete(final DInfo info) {
         final boolean markSuccess = infoUpdater.compareAndSet(
-                info.p, info.pinfo, new Mark<E,V>(info));                       // [[ mark CAS ]]
-        final Info<E,V> currentPInfo = info.p.info;
+                info.p, info.pinfo, new Mark(info));                       // [[ mark CAS ]]
+        final Info currentPInfo = info.p.info;
         if (markSuccess || (currentPInfo.getClass() == Mark.class
-                && ((Mark<E,V>) currentPInfo).dinfo == info)) {
+                && ((Mark) currentPInfo).dinfo == info)) {
             helpMarked(info);
             return true;
         } else {
             help(currentPInfo);
-            infoUpdater.compareAndSet(info.gp, info, new Clean<E,V>());         // [[ backtrack CAS ]]
+            infoUpdater.compareAndSet(info.gp, info, new Clean());         // [[ backtrack CAS ]]
             return false;
         }
     }
 
-    private void helpMarked(final DInfo<E,V> info) {
+    private void helpMarked(final DInfo info) {
         // observe that there are exactly two non-empty children of info.p,
         // so the following test correctly finds the "other" (remaining) node
-        Node<E,V> other = info.p.c.get(info.p.kcount);
+        Node other = info.p.c.get(info.p.kcount);
         for (int i=0;i<info.p.kcount;i++) {
             final Node u = info.p.c.get(i);
             if (u.kcount > 0 && u != info.l) {
@@ -331,7 +347,7 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
 
         // CAS the correct child pointer of info.gp from info.p to other
         info.gp.c.compareAndSet(info.gpindex, info.p, other);                   // [[ dchild CAS ]]
-        infoUpdater.compareAndSet(info.gp, info, new Clean<E,V>());             // [[ dunflag CAS ]]
+        infoUpdater.compareAndSet(info.gp, info, new Clean());             // [[ dunflag CAS ]]
     }
 
     public void treeString(StringBuffer sb){
@@ -365,12 +381,12 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
      *
      */
 
-    public static final class Node<E extends Comparable<? super E>, V> {
+    public static final class Node {
         public final int kcount;                          // key count
         public final Object[] k;                          // keys
         public final Object[] v;                          // values
         public final AtomicReferenceArray<Node> c;        // children
-        public volatile Info<E,V> info = null;
+        public volatile Info info = null;
         public volatile boolean dirty = false;
 
         /**
@@ -415,14 +431,14 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
             this.kcount = K-1;
             if (root) {
                 this.c = new AtomicReferenceArray<Node>(K);
-                this.c.set(0, new Node<E,V>(K, false));
+                this.c.set(0, new Node(K, false));
                 for (int i=1;i<K;i++) {
-                    this.c.set(i, new Node<E,V>());
+                    this.c.set(i, new Node());
                 }
             } else {
                 this.c = new AtomicReferenceArray<Node>(K);
                 for (int i=0;i<K;i++) { // empty leaves -- prevent deletion of this
-                    this.c.set(i, new Node<E,V>());
+                    this.c.set(i, new Node());
                 }
             }
         }
@@ -433,24 +449,24 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
          * not in l. This constructor creates a new internal node with K-1 keys and
          * K children sorted by key.
          */
-        public Node(final E knew, final Object vnew, final Node<E,V> l) {
+        public Node(final K knew, final Object vnew, final Node l) {
             this.kcount = l.kcount;
 
             // determine which elements of l.k should precede knew (will be 0...i-1)
             int i = 0;
             for (;i<kcount;i++) {
-                if (less(knew, (E)l.k[i])) break;
+                if (less(knew, (K)l.k[i])) break;
             }
             this.c = new AtomicReferenceArray<Node>(kcount+1);
             // add children with keys preceding knew
             for (int j=0;j<i;j++) {
-                this.c.set(j, new Node<E,V>(l.k[j], l.v[j]));
+                this.c.set(j, new Node(l.k[j], l.v[j]));
             }
             // add <knew, vnew>
-            this.c.set(i, new Node<E,V>(knew, vnew));
+            this.c.set(i, new Node(knew, vnew));
             // add children with keys following knew
             for (int j=i;j<kcount;j++) {
-                this.c.set(j+1, new Node<E,V>(l.k[j], l.v[j]));
+                this.c.set(j+1, new Node(l.k[j], l.v[j]));
             }
 
             this.k = new Object[kcount];
@@ -469,7 +485,7 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
          * @param l the leaf into which the key is being inserted
          * @param haskey indicates whether l already has <code>knew</code> as a key
          */
-        public Node(final E knew, final V vnew, final Node<E,V> l, final boolean haskey) {
+        public Node(final K knew, final K vnew, final Node l, final boolean haskey) {
             this.c = null;
             if (haskey) {
                 this.kcount = l.kcount;
@@ -477,7 +493,7 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
                 this.v = new Object[kcount];
                 for (int i=0;i<kcount;i++) {
                     // copy all values from l, writing vnew in the process
-                    if (equal(knew, (E)l.k[i])) {
+                    if (equal(knew, (K)l.k[i])) {
                         for (int j=0;j<kcount;j++) {
                             this.v[j] = l.v[j];
                         }
@@ -496,7 +512,7 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
                 // determine which keys precede knew
                 int i = 0;
                 for (;i<l.kcount;i++) {
-                    if (less(knew, (E)l.k[i])) {
+                    if (less(knew, (K)l.k[i])) {
                         break; // l.k[0...i-1] will all precede knew.
                     }
                 }
@@ -523,13 +539,13 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
          * key set of a leaf.  This constructor creates a new leaf with
          * keycount(old leaf)-1 sorted keys.
          */
-        public Node(final E key, final Node<E,V> l) {
+        public Node(final K key, final Node l) {
             this.c = null;
             this.kcount = l.kcount - 1;
             this.k = new Object[kcount];
             this.v = new Object[kcount];
             for (int i=0;i<l.kcount;i++) {
-                if (equal(key, (E)l.k[i])) {
+                if (equal(key, (K)l.k[i])) {
                     // key i is being removed from l
                     // so everything in l.k[0...i-1] union l.k[i+1...l.kcount-1] remains
                     for (int j=0;j<i;j++) {
@@ -545,17 +561,17 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
         }
 
         // Precondition: key is not null
-        final boolean hasKey(final E key) {
+        final boolean hasKey(final K key) {
             for (int i=0;i<kcount;i++) {
-                if (equal(key, (E)k[i])) return true;
+                if (equal(key, (K)k[i])) return true;
             }
             return false;
         }
 
         // Precondition: key is not null
-        V getValue(final E key) {
+        K getValue(final K key) {
             for (int i=0;i<kcount;i++) {
-                if (equal(key, (E)k[i])) return (V)v[i];
+                if (equal(key, (K)k[i])) return (K)v[i];
             }
             return null;
         }
@@ -592,10 +608,10 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
     static interface Info<E extends Comparable<? super E>, V> {}
 
     static final class IInfo<E extends Comparable<? super E>, V> implements Info<E,V> {
-        final Node<E,V> p, oldchild, newchild;
+        final Node p, oldchild, newchild;
         final int pindex;
 
-        IInfo(final Node<E,V> oldchild, final Node<E,V> p, final Node<E,V> newchild,
+        IInfo(final Node oldchild, final Node p, final Node newchild,
               final int pindex) {
             this.p = p;
             this.oldchild = oldchild;
@@ -614,13 +630,13 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
         }
     }
 
-    static final class DInfo<E extends Comparable<? super E>, V> implements Info<E,V> {
-        final Node<E,V> p, l, gp;
-        final Info<E,V> pinfo;
+    static final class DInfo implements Info {
+        final Node p, l, gp;
+        final Info pinfo;
         final int gpindex;
 
-        DInfo(final Node<E,V> l, final Node<E,V> p, final Node<E,V> gp,
-              final Info<E,V> pinfo, final int gpindex) {
+        DInfo(final Node l, final Node p, final Node gp,
+              final Info pinfo, final int gpindex) {
             this.p = p;
             this.l = l;
             this.gp = gp;
@@ -640,10 +656,10 @@ public class LockFreeKSTRQ<E extends Comparable<? super E>, V> {
         }
     }
 
-    static final class Mark<E extends Comparable<? super E>, V> implements Info<E,V> {
-        final DInfo<E,V> dinfo;
+    static final class Mark implements Info {
+        final DInfo dinfo;
 
-        Mark(final DInfo<E,V> dinfo) {
+        Mark(final DInfo dinfo) {
             this.dinfo = dinfo;
         }
 

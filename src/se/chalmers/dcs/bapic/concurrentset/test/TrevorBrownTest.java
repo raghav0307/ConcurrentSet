@@ -1,10 +1,11 @@
 package se.chalmers.dcs.bapic.concurrentset.test;
 
 import se.chalmers.dcs.bapic.concurrentset.Sets.*;
+import se.chalmers.dcs.bapic.concurrentset.utils.K;
 
 public class TrevorBrownTest {
     public static void main(String args[]){
-        LockFreeKSTRQ<Double, Double> set = new LockFreeKSTRQ<Double, Double>(4);
+        LockFreeKSTRQ set = new LockFreeKSTRQ(4);
 ////        System.out.println("set created");
 ////        System.out.println(set.add(new K(1)));
 ////        System.out.println(set.add(new K(1)) + " == false");
@@ -14,12 +15,12 @@ public class TrevorBrownTest {
 ////        System.out.println(set.remove(new K(1)));
 ////        System.out.println(set.remove(new K(3)) + " == false");
         for (int i = 0; i < 100; i++) {
-            set.add((double) i);
+            set.add(new K(i));
             System.out.println("Added " + i);
             StringBuffer sb = new StringBuffer();
             set.treeString(sb);
             System.out.println(sb);
-            System.out.println(set.remove((double) (i - 5)));
+            System.out.println(set.remove(new K(i - 5)));
             System.out.println("Removed " + (i-5));
             StringBuffer sb1 = new StringBuffer();
             set.treeString(sb1);
