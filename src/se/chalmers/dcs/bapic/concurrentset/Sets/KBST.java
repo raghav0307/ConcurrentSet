@@ -1,5 +1,6 @@
 package se.chalmers.dcs.bapic.concurrentset.Sets;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import se.chalmers.dcs.bapic.concurrentset.utils.*;
@@ -407,6 +408,5 @@ public class KBST implements SetADT{
             }
             return false;
         }
-
     }
 }
