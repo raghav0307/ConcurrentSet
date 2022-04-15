@@ -42,9 +42,9 @@ public class BenchMark {
 
     private static int numberOfThreads = 2;
     private static int maxRunningTime = 2;
-    private static int addPercent = 50;
-    private static int searchPercent = 0;
-    private static int removePercent = 50;
+    private static int addPercent = 80;
+    private static int searchPercent = 20;
+    private static int removePercent = 0;
     private static int keyRange = 100;
     private static int seed = 0;
     private static boolean testSanity = false;

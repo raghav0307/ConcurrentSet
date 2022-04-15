@@ -131,7 +131,7 @@ public class KBST implements SetADT{
                 return false;
             }
 
-            if (terminal.kcount > 1 || parent.getNonEmptyChildCount() != 2) { // SIMPLE_DELETE
+            if (true || terminal.kcount > 1 || parent.getNonEmptyChildCount() != 2) { // SIMPLE_DELETE
                 newNode = new Node(key, terminal, OperationType.SIMPLE_DELETE);
                 int terminalIndex = getChildIndex(parent, key);
 
@@ -157,7 +157,7 @@ public class KBST implements SetADT{
                         }
                     }
                 }
-                else if (terminal == parent.children.get(terminalIndex) 
+                else if (terminal == parent.children.get(terminalIndex)
                         && (terminal.isFlagged.get() || terminal.isTagged.get())) {
                     cleanUp(ancestor, successor, parent, key);
                 }
