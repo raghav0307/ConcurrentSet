@@ -40,14 +40,14 @@ import java.util.Random;
  */
 public class BenchMark {
 
-    private static int numberOfThreads = 4;
+    private static int numberOfThreads = 2;
     private static int maxRunningTime = 2;
     private static int addPercent = 50;
     private static int searchPercent = 0;
     private static int removePercent = 50;
     private static int keyRange = 100;
     private static int seed = 0;
-    private static boolean testSanity = true;
+    private static boolean testSanity = false;
     private static String setType = "KBST";
     private static int warmuptime = 2;
     private static double begin;
@@ -94,6 +94,9 @@ public class BenchMark {
                 break;
             case "KBST":
                 set = new KBST(4);
+                break;
+            case "TrevorBrown":
+                set = new LockFreeKSTRQ(4);
                 break;
             default:
                 set = null;
@@ -370,7 +373,7 @@ public class BenchMark {
     private static void helpUser() {
         String help = "Concurrent Set Implementation\n" + "\n" + "Usage:\n" + "  BenchMark [options...]\n" + "\n" + "Options:\n"
                       + "  -h, --help\n" + "        Print this message\n" + "  -a, --algo  <Algorithm> (default=" + setType + ")\n"
-                      + "        Available Algorithms <LazyList HarrisLinkedList HelpOptimalLFList HelpOptimalSimpleLFBST HelpOptimalLFBST HelpOptimalLocalRestartLFBST NMLFBST EFRBLFBST LFSkipList>\n" + "  -t, --test-sanity <Boolean>\n"
+                      + "        Available Algorithms <LazyList HarrisLinkedList HelpOptimalLFList HelpOptimalSimpleLFBST HelpOptimalLFBST HelpOptimalLocalRestartLFBST NMLFBST EFRBLFBST LFSkipList KBST TrevorBrown>\n" + "  -t, --test-sanity <Boolean>\n"
                       + "        Sanity check (default=" + testSanity + ")\n" + "  -d, --duration <int>\n"
                       + "        Test duration in seconds (0=infinite, default=" + maxRunningTime + "s)\n"
                       + "  -n, --num-threads <int>\n" + "        Number of threads (default=" + numberOfThreads + ")\n"

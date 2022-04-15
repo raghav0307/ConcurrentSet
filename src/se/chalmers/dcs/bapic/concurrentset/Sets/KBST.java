@@ -50,6 +50,11 @@ public class KBST implements SetADT{
     }
 
     public final boolean add(K key) {
+        // StringBuffer sb = new StringBuffer();
+        // treeString(sb);
+        // System.out.println(sb);
+        // System.out.println("Adding: " + key.getValue());
+
         Node newNode, parent, ancestor, terminal, successor;
 
         while (true) {
@@ -96,9 +101,13 @@ public class KBST implements SetADT{
     }
 
     public final boolean remove(K key) {
+        // StringBuffer sb = new StringBuffer();
+        // treeString(sb);
+        // System.out.println(sb);
+        // System.out.println("Removing: " + key.getValue());
+
         int mode = 1;    // 1:- INJECTION, 2:- CLEANUP
         Node parent, terminal, ancestor, successor, newNode = null;
-
         while (true) {
             ancestor = root;
             successor = parent = root.children.get(0);
@@ -122,7 +131,7 @@ public class KBST implements SetADT{
                 return false;
             }
 
-            if (terminal.kcount > 1 || parent.getNonEmptyChildCount() > 2) { // SIMPLE_DELETE
+            if (terminal.kcount > 1 || parent.getNonEmptyChildCount() != 2) { // SIMPLE_DELETE
                 newNode = new Node(key, terminal, OperationType.SIMPLE_DELETE);
                 int terminalIndex = getChildIndex(parent, key);
 
@@ -188,7 +197,7 @@ public class KBST implements SetADT{
         }
         if (count <= 1) {
             int successorIndex = getChildIndex(ancestor, key);
-            if (ancestor.children.get(successorIndex) == successor) {
+            if (ancestor.children.get(successorIndex) == successor && (!successor.isFlagged.get() && !successor.isTagged.get())) {
                 return ancestor.children.compareAndSet(successorIndex, successor, siblingChild);
             }
             else {
@@ -304,7 +313,7 @@ public class KBST implements SetADT{
             } else {
                 children = new AtomicReferenceArray<Node>(numChildren);
                 for (int i = 0; i < numChildren; i++) {
-                    children.set(0, new Node());
+                    children.set(i, new Node());
                 }
             }
         }
