@@ -1,6 +1,0 @@
-The experiment: Algo:HelpOptimalLocalRestartLFBST, Distribution: search 33 insert 34 delete 33, Duration(s):2, Threads:1, KeyRange(starting at 0):100
-Starting warm up
-End of warm up phase
-Throughput = 1570615 Ops/sec
-Memory-footprint of operations = 119766648 bytes
-Fairness = 100 percent

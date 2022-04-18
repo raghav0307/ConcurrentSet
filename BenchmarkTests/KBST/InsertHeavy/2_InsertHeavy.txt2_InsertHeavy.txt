@@ -1,6 +1,0 @@
-The experiment: Algo:KBST, Distribution: search 20 insert 60 delete 20, Duration(s):2, Threads:2, KeyRange(starting at 0):100
-Starting warm up
-End of warm up phase
-Throughput = 1882784 Ops/sec
-Memory-footprint of operations = 269617016 bytes
-Fairness = 100 percent

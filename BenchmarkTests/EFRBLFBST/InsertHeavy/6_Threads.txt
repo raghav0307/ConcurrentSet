@@ -1,0 +1,6 @@
+The experiment: Algo:EFRBLFBST, Distribution: search 20 insert 60 delete 20, Duration(s):2, Threads:6, KeyRange(starting at 0):100
+Starting warm up
+End of warm up phase
+Throughput = 4092910 Ops/sec
+Memory-footprint of operations = 485772304 bytes
+Fairness = 98 percent

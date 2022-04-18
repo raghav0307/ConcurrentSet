@@ -1,6 +1,0 @@
-The experiment: Algo:TrevorBrown, Distribution: search 20 insert 60 delete 20, Duration(s):2, Threads:3, KeyRange(starting at 0):100
-Starting warm up
-End of warm up phase
-Throughput = 2399607 Ops/sec
-Memory-footprint of operations = 336963224 bytes
-Fairness = 100 percent

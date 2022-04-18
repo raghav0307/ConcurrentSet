@@ -24,7 +24,7 @@ for algo in algorithms:
 		os.system("mkdir " + directory + op[0])
 		for thread in threads:
 			command = runCommand + " -a " + algo + " -n " + str(thread) + op[1]
-			outputFile = directory + op[0] + "/" + str(thread) + "_" + op[0] + ".txt"
-			os.system(command + " &> " + outputFile + str(thread) + "_" + op[0] + ".txt")
+			outputFile = directory + op[0] + "/" + str(thread) + "_" + "Threads" + ".txt"
+			os.system(command + " &> " + outputFile)
 		print(algo + op[0] + " Run successful")
 
