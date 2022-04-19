@@ -1,6 +1,5 @@
 package se.chalmers.dcs.bapic.concurrentset.Sets;
 
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import se.chalmers.dcs.bapic.concurrentset.utils.*;
@@ -127,17 +126,30 @@ public class KBST implements SetADT{
                 terminal = getChild(parent, key);
             }
 
-            if (!terminal.hasKey(key)) {
-                return false;
-            }
-
-            if (true || terminal.kcount > 1 || parent.getNonEmptyChildCount() != 2) { // SIMPLE_DELETE
-                newNode = new Node(key, terminal, OperationType.SIMPLE_DELETE);
+            if (mode == 1) {
+                if (!terminal.hasKey(key)) {
+                    return false;
+                }
+                boolean isSimpleDelete = false;
+                if (terminal.kcount > 1 || parent.getNonEmptyChildCount() != 2) {
+                    isSimpleDelete = true;
+                    newNode = new Node(key, terminal, OperationType.SIMPLE_DELETE);
+                } 
+                else {
+                    newNode = new Node(terminal, true);
+                }
                 int terminalIndex = getChildIndex(parent, key);
-
                 if (!terminal.isFlagged.get() && !terminal.isTagged.get()) {
                     if (parent.children.compareAndSet(terminalIndex, terminal, newNode)) {
-                        return true;
+                        if (isSimpleDelete) {
+                            return true;
+                        }
+                        else {
+                            mode = 2;
+                            if (cleanUp(ancestor, successor, parent, key)) {
+                                return true;
+                            }
+                        }
                     }
                 }
                 else if (terminal == parent.children.get(terminalIndex) 
@@ -145,30 +157,11 @@ public class KBST implements SetADT{
                     cleanUp(ancestor, successor, parent, key);
                 }
             }
-            else if (mode == 1) { // PRUNING DELETE
-                // set newNode to flagged terminal node
-                newNode = new Node(terminal, true);
-                int terminalIndex = getChildIndex(parent, key);
-
-                if (!terminal.isFlagged.get() && !terminal.isTagged.get()) {
-                    if (parent.children.compareAndSet(terminalIndex, terminal, newNode)) {
-                        if (cleanUp(ancestor, successor, parent, key)) {
-                            return true;
-                        }
-                    }
+            else { // Pruning Delete: mode == 2
+                if (!terminal.hasKey(key)) {
+                    return true;
                 }
-                else if (terminal == parent.children.get(terminalIndex)
-                        && (terminal.isFlagged.get() || terminal.isTagged.get())) {
-                    cleanUp(ancestor, successor, parent, key);
-                }
-            }
-            else if (mode == 2) {
-                if (terminal == newNode) {
-                    if (cleanUp(ancestor, successor, parent, key)) {
-                        return true;
-                    }
-                }
-                else {
+                else if (cleanUp(ancestor, successor, parent, key)) {
                     return true;
                 }
             }
