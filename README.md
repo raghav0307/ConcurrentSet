@@ -1,26 +1,38 @@
-# ConcurrentSet
-This project contains following concurrent set algorithms:
+# Concurrent Set
 
-1) LazyList: Heller, S., Herlihy, M., Luchangco, V., Moir, M., Scherer III, W.N. and Shavit, N., 2005. A lazy concurrent list-based set algorithm. In Principles of Distributed Systems (pp. 3-16). Springer Berlin Heidelberg.
+This repository has been forked from Dr. Bapi's ConcurrentSet github repository. We would like to thank him for making this resources available for us.
 
-2) HarrisLinkedList: Harris, T.L., 2001, October. A pragmatic implementation of non-blocking linked-lists. In DISC (Vol. 1, pp. 300-314).
+We have added two classes to this repository, KBST and LockFreeKSTRQ. KBST has been designed and implemented by us. It is a lock-free K-ary search tree using edge level synchronization. LockFreeKSTRQ is taken from Trevor Brown's webpage and we have ported it into this repository.
 
-3) HelpOptimalLFList: Chatterjee, B., Walulya, I. and Tsigas, P. (2016) Help-optimal and Language-portable Lock-free Concurrent Data Structures. Technical report - Department of Computer Science and Engineering, Chalmers University of Technology and Göteborg University, no: 2016-02 ISSN: 1652-926X. 
+## Instructions for running the code
 
-4) HelpOptimalSimpleLFBST: Chatterjee, B., Walulya, I. and Tsigas, P. (2016) Help-optimal and Language-portable Lock-free Concurrent Data Structures. Technical report - Department of Computer Science and Engineering, Chalmers University of Technology and Göteborg University, no: 2016-02 ISSN: 1652-926X. 
+Step 1: Build the repository
+```
+$ ant
+```
 
-5) HelpOptimalLFBST: Chatterjee, B., Walulya, I. and Tsigas, P. (2016) Help-optimal and Language-portable Lock-free Concurrent Data Structures. Technical report - Department of Computer Science and Engineering, Chalmers University of Technology and Göteborg University, no: 2016-02 ISSN: 1652-926X.
+Step 2.a: Run Sanity Tests
+```
+$ java -d64 -Xms4G -Xmx8G -cp ./dist/ConcurrentSet.jar se.chalmers.dcs.bapic.concurrentset.test.BenchMark -a KBST -t true
+```
 
-6) HelpOptimalLocalRestartLFBST: Chatterjee, B., Walulya, I. and Tsigas, P. (2016) Help-optimal and Language-portable Lock-free Concurrent Data Structures. Technical report - Department of Computer Science and Engineering, Chalmers University of Technology and Göteborg University, no: 2016-02 ISSN: 1652-926X.
+Step 2.b: Run Benchmark Tests
+```
+$ java -d64 -Xms4G -Xmx8G -cp ./dist/ConcurrentSet.jar se.chalmers.dcs.bapic.concurrentset.test.BenchMark -a KBST 
+```
 
-7) NMLFBST: Natarajan, A. and Mittal, N., 2014, February. Fast concurrent lock-free binary search trees. In ACM SIGPLAN Notices (Vol. 49, No. 8, pp. 317-328). ACM.
+## Instructions for reproducing the evaluation experiment
 
-8) EFRBLFBST: Ellen, F., Fatourou, P., Ruppert, E. and van Breugel, F., 2010, July. Non-blocking binary search trees. In Proceedings of the 29th ACM SIGACT-SIGOPS symposium on Principles of distributed computing (pp. 131-140). ACM.
+Step 1: Build the repository
+```
+$ ant
+```
 
-9) LFSkipList: A wrapper for java.util.concurrent.ConcurrentSkipListSet for comparison purpose.
+Step 2: Run Benchmark test with different parameters
+```
+$ python3 Benchmarkscript.py
+$ python3 KBSTvsTrevor.py
+```
 
-10) HelpAwareInternalLFBST: A modified version of the lock-free internal BST algorithm of Chatterjee, B., Nguyen, N. and Tsigas, P. (2014) Efficient Lock-free Binary Search Trees in PODC 2014 (p.p. 322-331). 
-
-This is an Apache Ant managed project. To build, run ant in the project directory. For an optimized run, following command containing flags can be used: java -d64 -Xms4G -Xmx8G -cp ./dist/ConcurrentSet.jar se.chalmers.dcs.bapic.concurrentset.test.BenchMark (Assuming that the application is run on a 64-bit environment).
-
-Further, to bind the jvm threads on a NUMA machine, numactl --physcpubind=<nodes> can be used. For further info on numactl see its manpages.  
+Step 3: Plot graphs
+Use the following jupyter notebooks `PlotsScript.ipynb` and `KBSTvsTrevorBrownPlotsScript.ipynb` to generate the graphs.
