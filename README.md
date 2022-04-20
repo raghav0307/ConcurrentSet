@@ -35,4 +35,5 @@ $ python3 KBSTvsTrevor.py
 ```
 
 Step 3: Plot graphs
+
 Use the following jupyter notebooks `PlotsScript.ipynb` and `KBSTvsTrevorBrownPlotsScript.ipynb` to generate the graphs.
