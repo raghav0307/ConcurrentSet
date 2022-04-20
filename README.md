@@ -1,6 +1,6 @@
 # Concurrent Set
 
-This repository has been forked from Dr. Bapi's ConcurrentSet github repository. We would like to thank him for making this resources available for us.
+This repository has been forked from Dr. Bapi's ConcurrentSet github repository. We would like to thank him for making this resource available for us.
 
 We have added two classes to this repository, KBST and LockFreeKSTRQ. KBST has been designed and implemented by us. It is a lock-free K-ary search tree using edge level synchronization. LockFreeKSTRQ is taken from Trevor Brown's webpage and we have ported it into this repository.
 
